@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50 active:bg-primary-100;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .custom-marker-icon {
+    @apply flex items-center justify-center transition-transform duration-200;
+    /* Removed white background and border */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .custom-marker-icon:hover {
+    @apply scale-125 z-50;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Custom Popup Styles */
+  .custom-popup .leaflet-popup-content-wrapper {
+    @apply bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-100;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .custom-popup .leaflet-popup-content {
+    margin: 0 !important;
+    width: auto !important;
+  }
+
+  .custom-popup .leaflet-popup-tip {
+    @apply bg-white/95 backdrop-blur-sm shadow-sm;
+  }
+
+  .custom-popup a.leaflet-popup-close-button {
+    top: 12px;
+    right: 12px;
+    padding: 4px;
+    color: #9ca3af !important;
+    font-size: 18px !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(243, 244, 246, 0.8);
+    transition: all 0.2s;
+  }
+
+  .custom-popup a.leaflet-popup-close-button:hover {
+    color: #ef4444 !important;
+    background: #fee2e2;
+  }
+}
