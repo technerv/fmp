@@ -69,6 +69,7 @@ class BuyerProfile(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Latitude")
     longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Longitude")
     license_number = models.CharField(max_length=100, blank=True)
+    profile_picture = models.ImageField(upload_to='buyers/', blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     total_purchases = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     preferred_categories = models.JSONField(default=list, blank=True)

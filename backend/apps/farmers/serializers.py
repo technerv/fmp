@@ -30,7 +30,7 @@ class BuyerProfileSerializer(serializers.ModelSerializer):
         model = BuyerProfile
         fields = [
             'id', 'user', 'business_name', 'buyer_type', 'county',
-            'latitude', 'longitude', 'license_number', 'rating', 'total_purchases',
+            'latitude', 'longitude', 'license_number', 'profile_picture', 'rating', 'total_purchases',
             'preferred_categories', 'created_at'
         ]
         read_only_fields = ['id', 'rating', 'total_purchases', 'created_at']

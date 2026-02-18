@@ -1,0 +1,17 @@
+app = "fmp-backend"
+
+[build]
+  dockerfile = "backend/fly.toml"
+
+[env]
+  DJANGO_SETTINGS_MODULE = "backend.settings.production"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health/"

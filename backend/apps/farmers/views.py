@@ -61,6 +61,7 @@ class FarmerProfileView(generics.RetrieveUpdateAPIView):
     """Get or update farmer profile"""
     serializer_class = FarmerProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
     
     def get_object(self):
         return self.request.user.farmer_profile
@@ -70,6 +71,7 @@ class BuyerProfileView(generics.RetrieveUpdateAPIView):
     """Get or update buyer profile"""
     serializer_class = BuyerProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
     
     def get_object(self):
         return self.request.user.buyer_profile

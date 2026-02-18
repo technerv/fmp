@@ -52,26 +52,43 @@ export default function Profile() {
       }
 
       // 2. Update Profile Details
-      const profileUpdates = { ...data }
-
-      // Sanitize numeric fields
-      if (profileUpdates.farm_size_acres === '') profileUpdates.farm_size_acres = null
-      if (profileUpdates.years_farming === '') profileUpdates.years_farming = 0
-
-      delete profileUpdates.email
-      delete profileUpdates.phone_number
-      delete profileUpdates.user // Remove nested user object if present
-      delete profileUpdates.id
-      delete profileUpdates.rating
-      delete profileUpdates.total_sales
-      delete profileUpdates.total_purchases
-      delete profileUpdates.created_at
-
       const endpoint = user.user_type === 'farmer' 
         ? '/farmers/profile/farmer/' 
         : '/farmers/profile/buyer/'
       
-      const response = await api.patch(endpoint, profileUpdates)
+      const formDataToSend = new FormData();
+      
+      Object.keys(data).forEach(key => {
+        // Skip user fields and read-only fields
+        if (['email', 'phone_number', 'user', 'id', 'rating', 'total_sales', 'total_purchases', 'created_at'].includes(key)) return;
+        
+        let value = data[key];
+
+        // Sanitize numeric fields
+        if (key === 'farm_size_acres' && value === '') value = null;
+        if (key === 'years_farming' && value === '') value = 0;
+        if (key === 'latitude' && value === '') return;
+        if (key === 'longitude' && value === '') return;
+        if (typeof value === 'string' && value.trim() === '') return;
+        // Avoid sending arrays/objects via multipart unless explicitly edited
+        if (Array.isArray(value)) return;
+        if (value && typeof value === 'object' && !(value instanceof File)) return;
+
+        // Handle profile_picture
+        if (key === 'profile_picture') {
+            if (value instanceof File) {
+                formDataToSend.append(key, value);
+            }
+        } else if (value !== null && value !== undefined) {
+            formDataToSend.append(key, value);
+        }
+      });
+
+      const response = await api.patch(endpoint, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
       return response.data
     },
     onSuccess: () => {
@@ -110,6 +127,12 @@ export default function Profile() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, profile_picture: e.target.files[0] }))
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     updateProfileMutation.mutate(formData)
@@ -126,22 +149,37 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <div>
-            <h1 className="text-3xl font-bold">My Profile</h1>
-            <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    user?.is_verified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                    {user?.is_verified ? 'Verified Account' : 'Unverified'}
-                </span>
-                {!user?.is_verified && (
-                    <button 
-                        onClick={() => navigate('/verification')}
-                        className="text-primary-600 hover:text-primary-700 text-sm font-medium underline"
-                    >
-                        Verify Now
-                    </button>
+        <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border flex items-center justify-center">
+                {profile?.profile_picture ? (
+                    <img 
+                        src={profile.profile_picture} 
+                        alt="Profile" 
+                        className="h-full w-full object-cover"
+                    />
+                ) : (
+                    <span className="text-xl font-bold text-gray-500">
+                        {user?.user_type?.[0]?.toUpperCase()}
+                    </span>
                 )}
+            </div>
+            <div>
+                <h1 className="text-3xl font-bold">My Profile</h1>
+                <div className="flex items-center gap-2 mt-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        user?.is_verified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                        {user?.is_verified ? 'Verified Account' : 'Unverified'}
+                    </span>
+                    {!user?.is_verified && (
+                        <button 
+                            onClick={() => navigate('/verification')}
+                            className="text-primary-600 hover:text-primary-700 text-sm font-medium underline"
+                        >
+                            Verify Now
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
         <div className="space-x-4">
@@ -174,6 +212,19 @@ export default function Profile() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Account Information</h2>
+            <div className="flex items-center gap-4 mb-4">
+              {formData.profile_picture ? (
+                <img
+                  src={typeof formData.profile_picture === 'string' ? formData.profile_picture : URL.createObjectURL(formData.profile_picture)}
+                  alt="Profile"
+                  className="h-16 w-16 rounded-full object-cover border"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold border">
+                  {(user?.user_type === 'farmer' ? 'F' : 'B')}
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -205,6 +256,34 @@ export default function Profile() {
 
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Profile Details</h2>
+            
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                <div className="flex items-center space-x-4">
+                    {formData.profile_picture && (
+                        <img 
+                            src={typeof formData.profile_picture === 'string' 
+                                ? formData.profile_picture 
+                                : URL.createObjectURL(formData.profile_picture)} 
+                            alt="Profile" 
+                            className="h-20 w-20 rounded-full object-cover border"
+                        />
+                    )}
+                    <input
+                        type="file"
+                        name="profile_picture"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary-50 file:text-primary-700
+                        hover:file:bg-primary-100"
+                    />
+                </div>
+            </div>
+
             <div className="space-y-4">
               {user?.user_type === 'farmer' ? (
                 <>
@@ -335,16 +414,31 @@ export default function Profile() {
         <>
           <div className="card mb-6">
             <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-            <div className="space-y-2">
-              <p>
-                <span className="font-semibold">Phone:</span> {user?.phone_number}
-              </p>
-              <p>
-                <span className="font-semibold">Email:</span> {user?.email || 'Not set'}
-              </p>
-              <p>
-                <span className="font-semibold">User Type:</span> {user?.user_type}
-              </p>
+            <div className="flex items-start gap-6">
+                <div className="h-20 w-20 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border flex items-center justify-center">
+                    {profile?.profile_picture ? (
+                        <img 
+                            src={profile.profile_picture} 
+                            alt="Profile" 
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <span className="text-2xl font-bold text-gray-500">
+                            {user?.user_type?.[0]?.toUpperCase()}
+                        </span>
+                    )}
+                </div>
+                <div className="space-y-2 flex-1">
+                    <p>
+                        <span className="font-semibold">Phone:</span> {user?.phone_number}
+                    </p>
+                    <p>
+                        <span className="font-semibold">Email:</span> {user?.email || 'Not set'}
+                    </p>
+                    <p>
+                        <span className="font-semibold">User Type:</span> {user?.user_type}
+                    </p>
+                </div>
             </div>
           </div>
 
