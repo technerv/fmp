@@ -1,0 +1,4 @@
+venv/
+backend/fly.toml
+backend/requirements.txt.save
+backend/test_profile_picture.py
